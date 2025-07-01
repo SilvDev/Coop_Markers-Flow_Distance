@@ -1,6 +1,6 @@
 /*
 *	Coop Markers - Flow Distance
-*	Copyright (C) 2024 Silvers
+*	Copyright (C) 2025 Silvers
 *
 *	This program is free software: you can redistribute it and/or modify
 *	it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 
 
-#define PLUGIN_VERSION 		"1.12"
+#define PLUGIN_VERSION 		"1.13"
 
 /*======================================================================================
 	Plugin Info:
@@ -31,6 +31,9 @@
 
 ========================================================================================
 	Change Log:
+
+1.13 (01-Jul-2024)
+	- Changed cvar "l4d_coop_markers_panel" to also allow showing hint and center messages.
 
 1.12 (22-Sep-2024)
 	- Changed cvar "l4d_coop_markers_panel" to show both chat and panel messages.
@@ -219,7 +222,7 @@ public void OnPluginStart()
 	g_hCvarAllow =		CreateConVar(	"l4d_coop_markers_allow",			"1",					"0=Plugin off, 1=Plugin on.", CVAR_FLAGS );
 	if( !g_bLeft4Dead2 )
 		g_hCvarModes =	CreateConVar(	"l4d_coop_markers_modes",			"5",					"Turn on the plugin in these game modes. 0=All, 1=Coop, 2=Survival, 4=Versus. Add numbers together.", CVAR_FLAGS );
-	g_hCvarPanel =		CreateConVar(	"l4d_coop_markers_panel",			"1",					"0=Print to chat. 1=Display panel. 2=Both.", CVAR_FLAGS );
+	g_hCvarPanel =		CreateConVar(	"l4d_coop_markers_panel",			"1",					"0=Print to chat. 1=Display panel. 2=Both. 3=Display as center text. 4=Display as hint text.", CVAR_FLAGS );
 	g_hCvarPercent =	CreateConVar(	"l4d_coop_markers_percent",			"25",					"After what percentage of progress to display the marker.", CVAR_FLAGS );
 	g_hCvarTimer =		CreateConVar(	"l4d_coop_markers_timer",			"2.0",					"How often the timer fires to check progress.", CVAR_FLAGS );
 	CreateConVar(						"l4d_coop_markers_version",			PLUGIN_VERSION,			"Coop Markers plugin version.", FCVAR_NOTIFY|FCVAR_DONTRECORD);
@@ -452,7 +455,8 @@ Action TimerUpdate(Handle timer)
 // ====================================================================================================
 void FireMarker(int value)
 {
-	if( !g_iCvarPanel || g_iCvarPanel & (1<<1) )
+	// if( !g_iCvarPanel || g_iCvarPanel & (1<<1) )
+	if( g_iCvarPanel == 0 || g_iCvarPanel == 2 )
 	{
 		for( int i = 1; i <= MaxClients; i++ )
 		{
@@ -465,7 +469,33 @@ void FireMarker(int value)
 		PlaySound();
 	}
 
-	if( g_iCvarPanel )
+	else if( g_iCvarPanel == 3 )
+	{
+		for( int i = 1; i <= MaxClients; i++ )
+		{
+			if( IsClientInGame(i) )
+			{
+				PrintCenterText(i, "\x04%T", "Coop_Marker", i, value); // L4D_VS_REACHED_MARKER
+			}
+		}
+
+		PlaySound();
+	}
+
+	else if( g_iCvarPanel == 4 )
+	{
+		for( int i = 1; i <= MaxClients; i++ )
+		{
+			if( IsClientInGame(i) )
+			{
+				PrintHintText(i, "\x04%T", "Coop_Marker", i, value); // L4D_VS_REACHED_MARKER
+			}
+		}
+
+		PlaySound();
+	}
+
+	if( g_iCvarPanel == 1 || g_iCvarPanel == 2 )
 	{
 		if( !g_bLeft4Dead2 )
 		{
