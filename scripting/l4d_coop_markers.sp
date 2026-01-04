@@ -1,6 +1,6 @@
 /*
 *	Coop Markers - Flow Distance
-*	Copyright (C) 2025 Silvers
+*	Copyright (C) 2026 Silvers
 *
 *	This program is free software: you can redistribute it and/or modify
 *	it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 
 
-#define PLUGIN_VERSION 		"1.13"
+#define PLUGIN_VERSION 		"1.14"
 
 /*======================================================================================
 	Plugin Info:
@@ -32,7 +32,10 @@
 ========================================================================================
 	Change Log:
 
-1.13 (01-Jul-2024)
+1.14 (04-Jan-2026)
+	- Added commands "sm_prog" and "sm_progress" to show current progress. Requested by "Nevve9".
+
+1.13 (01-Jul-2025)
 	- Changed cvar "l4d_coop_markers_panel" to also allow showing hint and center messages.
 
 1.12 (22-Sep-2024)
@@ -236,6 +239,46 @@ public void OnPluginStart()
 	g_hCvarPanel.AddChangeHook(ConVarChanged_Cvars);
 	g_hCvarPercent.AddChangeHook(ConVarChanged_Cvars);
 	g_hCvarTimer.AddChangeHook(ConVarChanged_Cvars);
+
+
+
+	// ====================================================================================================
+	// COMMANDS
+	// ====================================================================================================
+	RegConsoleCmd("sm_prog", CmdProgress, "Displays the current flow distance progress of the Survivors.");
+	RegConsoleCmd("sm_progress", CmdProgress, "Displays the current flow distance progress of the Survivors.");
+}
+
+
+
+// ====================================================================================================
+//					COMMANDS
+// ====================================================================================================
+Action CmdProgress(int client, int args)
+{
+	float dist;
+	int total;
+	int area;
+
+	for( int i = 1; i <= MaxClients; i++ )
+	{
+		if( IsClientInGame(i) && GetClientTeam(i) == 2 && IsPlayerAlive(i) )
+		{
+			area = SDKCall(g_hPlayerGetLastKnownArea, i);
+
+			if( area )
+			{
+				dist += view_as<float>(LoadFromAddress(view_as<Address>(area + m_flow), NumberType_Int32));
+				total++;
+			}
+		}
+	}
+
+	dist /= total;
+	int range = RoundToNearest(dist / g_fDistance * 100);
+
+	ReplyToCommand(client, "\x04Survivor Progress: \x01%d%%", range);
+	return Plugin_Handled;
 }
 
 
